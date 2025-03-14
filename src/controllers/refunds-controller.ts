@@ -37,4 +37,24 @@ export class RefundsController {
     })
     response.status(201).json({ refund });
   }
+
+  async index(request: Request, response: Response){
+    const querySchema = z.object({
+        name: z.string().optional().default(""),
+    })
+
+    const {name} = querySchema.parse(request.query)
+    const refunds = await prisma.refunds.findMany({
+        where:{
+            user:{
+                name:{
+                    contains:name.trim()
+                }
+            }
+        },
+        orderBy:{createdAt:"desc"},
+        include:{user:true}
+    })
+    response.json({refunds})
+  }
 }
