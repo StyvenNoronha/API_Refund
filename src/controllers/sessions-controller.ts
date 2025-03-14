@@ -2,6 +2,8 @@ import {z} from"zod"
 import { Request, Response } from "express";
 import { prisma } from "@/database/prisma";
 import { AppError } from "@/utils/AppError";
+import { authConfig } from "@/configs/auth";
+import { sign } from "jsonwebtoken";
 import { compare } from "bcrypt";
 export class SessionsController{
     async create(request: Request, response: Response){
@@ -23,6 +25,18 @@ export class SessionsController{
         if(!passwordMatched){
             throw new AppError("email ou senha inválido", 401)
         }
-        response.json({email, password})
+        //criado a verificação 
+        const {secret, expiresIn} = authConfig.jwt
+        const token = sign({role:user.role}, secret,{
+            subject: user.id,
+            expiresIn
+        })
+
+
+        //passar para o usuário sem aparecer a senha
+        const {password:_, ...userWithoutPassword} = user
+
+
+        response.json({token, userWithoutPassword})
     }
 }
